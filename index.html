@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MYSTERY NUMBER GAME</title>
+    <!-- Favicon Tanda Tanya Merah -->
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/128/9392/9392723.png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        header, footer {
+            text-align: center;
+        }
+
+        /* Animasi Kado Bergoyang */
+        .gift-box {
+            font-size: 80px;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .shake {
+            animation: shake-animation 0.5s infinite;
+        }
+
+        @keyframes shake-animation {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(5px, 5px) rotate(5deg); }
+            50% { transform: translate(0, 0) rotate(0eg); }
+            75% { transform: translate(-5px, 5px) rotate(-5deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        /* Popup Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2.5rem 1.5rem;
+            border-radius: 1.5rem;
+            position: relative;
+            max-width: 90%;
+            width: 450px;
+            text-align: left;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 28px;
+            font-weight: bold;
+            color: #4b5563;
+            line-height: 1;
+        }
+
+        .number-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1f2937;
+            /* Mengubah warna teks angka menjadi merah */
+            color: #ef4444; 
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-size: 24px; 
+            font-weight: 800;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
+            text-align: center;
+        }
+
+        /* Toast Center Notification */
+        .toast-center {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 150;
+            min-width: 250px;
+            text-align: center;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed !important;
+        }
+
+        /* Dropdown Menu logic */
+        #dropdown-menu {
+            display: none;
+        }
+        #dropdown-menu.active {
+            display: block;
+        }
+
+        /* Chrome, Safari, Edge, Opera - Remove arrows from number input */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="bg-white shadow-md p-6 relative">
+        <h1 class="text-3xl font-extrabold text-gray-800 uppercase">Mystery Number Game</h1>
+        <p id="header-desc" class="text-gray-500 mt-1 uppercase">Tunggu & Lihat Isi Angka Dengan Cepat</p>
+        
+        <!-- Menu Button (Warna Biru) -->
+        <div class="absolute right-4 top-1/2 -translate-y-1/2" id="menu-container">
+            <button id="menu-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+                Menu ☰
+            </button>
+            <div id="dropdown-menu" class="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-xl z-20">
+                <a href="#" onclick="switchMode('live')" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Live Mode</a>
+                <a href="#" onclick="switchMode('play')" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Play Mode</a>
+                <a href="#" onclick="openAbout()" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">About</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4">
+        <div class="text-center space-y-6 w-full max-w-md">
+            <!-- Mode Indicator -->
+            <div id="mode-badge" class="inline-block px-4 py-1 rounded bg-blue-100 text-blue-800 text-l font-bold uppercase mb-2">Live Mode</div>
+
+            <div class="timer-container">
+                <p class="text-xl font-bold text-gray-700 uppercase tracking-wider">Angka terbuka dalam</p>
+                <div id="timer-display" class="text-5xl font-black text-blue-600 mt-2">5</div>
+            </div>
+
+            <!-- Gift Container -->
+            <div id="gift-container" class="gift-box shake my-1">
+                📄
+            </div>
+
+            <!-- Play Mode Input (Hidden initially) -->
+            <div id="play-mode-input" class="hidden flex items-center justify-center gap-2 mt-4">
+                <input type="number" id="user-guess" placeholder="0000" maxlength="4" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" class="w-24 p-2 border-2 border-gray-300 rounded-lg text-center font-bold text-lg focus:outline-none focus:border-blue-500">
+                <button id="btn-submit" onclick="checkAnswer()" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-blue-700 transition">Jawab</button>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="flex flex-wrap justify-center gap-4 mt-8">
+                <button id="btn-start" onclick="startGame()" class="bg-green-800 text-white px-6 py-3 rounded-full font-bold hover:bg-green-900 transition transform active:scale-95 shadow-lg">
+                    MULAI ACAK
+                </button>
+                <button id="btn-retry" onclick="replayLast()" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition transform active:scale-95 shadow-lg">
+                    ULANGI
+                </button>
+                <button id="btn-random" onclick="startGame()" class="bg-green-500 text-white px-6 py-3 rounded-full font-bold hover:bg-green-600 transition transform active:scale-95 shadow-lg">
+                    ACAK LAGI
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="bg-white p-4 border-t border-gray-200 mt-auto">
+        <p class="text-gray-600 text-sm font-medium">&copy; Made by JMC World 2026 - Inspired from YT Shorts</p>
+    </footer>
+
+    <!-- Modal About -->
+    <div id="modal-about" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeAbout()">&times;</span>
+            <h2 class="text-xl font-extrabold mb-4 text-center border-b pb-2">INFORMASI DAN CARA BERMAIN</h2>
+            <div class="space-y-4 text-sm text-gray-700">
+                <div>
+                    <p class="font-bold text-blue-800 uppercase text-center">Live Mode</p>
+                    <p>Memainkan langsung secara offline dan bisa dilakukan minimal 2 orang atau lebih. Jika pemain berhasil menebak angka yang muncul, maka host wajib mengacak angka lagi dengan memilih tombol Acak Lagi.</p>
+                </div>
+                <div>
+                    <p class="font-bold text-green-800 uppercase text-center">Play Mode</p>
+                    <p>Main langsung secara mandiri dan tebak angka dengan benar. Pemain bisa memilih Ulangi jika tidak yakin dengan jawabannya atau salah menjawab.</p>
+                </div>
+                <div class="pt-2 text-xs text-center text-gray-400 italic border-t">
+                    Dibuat oleh JMC World 2026
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Number Result Popup -->
+    <div id="number-popup" class="number-popup">
+        ANGKA: <span id="random-number" style="color: #ef4444;">0000</span>
+    </div>
+
+    <script>
+        let timeLeft = 5;
+        let timerInterval = null;
+        let lastNumber = null;
+        let isRunning = false;
+        let currentMode = 'live'; // 'live' or 'play'
+        let hasWon = false; // Status jika tebakan sudah benar
+
+        const timerDisplay = document.getElementById('timer-display');
+        const giftBox = document.getElementById('gift-container');
+        const btnStart = document.getElementById('btn-start');
+        const btnRetry = document.getElementById('btn-retry');
+        const btnRandom = document.getElementById('btn-random');
+        const numberPopup = document.getElementById('number-popup');
+        const randomNumberText = document.getElementById('random-number');
+        const modalAbout = document.getElementById('modal-about');
+        const playInputArea = document.getElementById('play-mode-input');
+        const modeBadge = document.getElementById('mode-badge');
+        const userGuessInput = document.getElementById('user-guess');
+        const btnSubmit = document.getElementById('btn-submit');
+        
+        const menuBtn = document.getElementById('menu-btn');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        const menuContainer = document.getElementById('menu-container');
+
+        window.onload = () => {
+            resetUI();
+            
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('active');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!menuContainer.contains(e.target)) {
+                    dropdownMenu.classList.remove('active');
+                }
+            });
+        };
+
+        function switchMode(mode) {
+            currentMode = mode;
+            if (mode === 'play') {
+                playInputArea.classList.remove('hidden');
+                modeBadge.innerText = "Play Mode";
+                modeBadge.className = "inline-block px-4 py-2 rounded bg-green-100 text-green-800 text-l font-bold uppercase mb-2";
+            } else {
+                playInputArea.classList.add('hidden');
+                modeBadge.innerText = "Live Mode";
+                modeBadge.className = "inline-block px-4 py-2 rounded bg-blue-100 text-blue-800 text-l font-bold uppercase mb-2";
+            }
+            
+            dropdownMenu.classList.remove('active');
+            
+            resetUI();
+            lastNumber = null;
+            userGuessInput.value = "";
+        }
+
+        function resetUI() {
+            timeLeft = 5;
+            timerDisplay.innerText = timeLeft;
+            isRunning = false;
+            hasWon = false; // Reset status kemenangan
+            
+            btnStart.disabled = false;
+            btnStart.classList.remove('btn-disabled');
+
+            btnRetry.disabled = true;
+            btnRetry.classList.add('btn-disabled');
+            btnRandom.disabled = true;
+            btnRandom.classList.add('btn-disabled');
+            
+            giftBox.classList.add('shake');
+            
+            // Re-enable submit button for play mode
+            btnSubmit.disabled = false;
+            btnSubmit.classList.remove('btn-disabled');
+        }
+
+        function setAllButtonsDisabled(disabled) {
+            btnStart.disabled = disabled;
+            btnRetry.disabled = disabled;
+            btnRandom.disabled = disabled;
+            
+            if (disabled) {
+                btnStart.classList.add('btn-disabled');
+                btnRetry.classList.add('btn-disabled');
+                btnRandom.classList.add('btn-disabled');
+            } else {
+                btnStart.classList.remove('btn-disabled');
+                // Khusus Retry: hanya nyala jika belum menang
+                if (hasWon) {
+                    btnRetry.disabled = true;
+                    btnRetry.classList.add('btn-disabled');
+                } else {
+                    btnRetry.classList.remove('btn-disabled');
+                }
+                btnRandom.classList.remove('btn-disabled');
+            }
+        }
+
+        function startGame() {
+            if (isRunning) return;
+            userGuessInput.value = "";
+            isRunning = true;
+            hasWon = false; // Mulai baru, status menang reset
+            timeLeft = 5;
+            timerDisplay.innerText = timeLeft;
+            setAllButtonsDisabled(true);
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showMysteryNumber();
+                }
+            }, 1000);
+        }
+
+        function replayLast() {
+            if (isRunning || !lastNumber || hasWon) return;
+            userGuessInput.value = "";
+            isRunning = true;
+            timeLeft = 5;
+            timerDisplay.innerText = timeLeft;
+            setAllButtonsDisabled(true);
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showMysteryNumber(true);
+                }
+            }, 1000);
+        }
+
+        function showMysteryNumber(isReplay = false) {
+            let num;
+            if (isReplay && lastNumber) {
+                num = lastNumber;
+            } else {
+                num = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
+                lastNumber = num;
+            }
+
+            randomNumberText.innerText = num;
+            numberPopup.style.display = 'block';
+            
+            setTimeout(() => {
+                numberPopup.style.display = 'none';
+                finishCycle();
+            }, 200);
+        }
+
+        function finishCycle() {
+            isRunning = false;
+            btnRandom.disabled = false;
+            btnRandom.classList.remove('btn-disabled');
+            
+            // Ulangi hanya aktif jika tebakan belum benar
+            if (!hasWon) {
+                btnRetry.disabled = false;
+                btnRetry.classList.remove('btn-disabled');
+            }
+
+            btnStart.disabled = true;
+            btnStart.classList.add('btn-disabled');
+        }
+
+        function checkAnswer() {
+            if (!lastNumber) {
+                showMessage("Mulai acak angka dulu!", "bg-gray-800");
+                return;
+            }
+            
+            if (userGuessInput.value == lastNumber) {
+                hasWon = true; // Tandai sudah menang
+                
+                // Nonaktifkan tombol Ulangi seketika
+                btnRetry.disabled = true;
+                btnRetry.classList.add('btn-disabled');
+                
+                showMessage("BENAR! \nAngkanya adalah " + lastNumber, "bg-green-600");
+            } else {
+                showMessage("SALAH! \nCoba lagi.", "bg-red-600");
+            }
+        }
+
+        function showMessage(msg, colorClass) {
+            const msgBox = document.createElement('div');
+            msgBox.className = `toast-center ${colorClass} text-white px-8 py-6 rounded-2xl font-bold text-xl whitespace-pre-line`;
+            msgBox.innerText = msg;
+            document.body.appendChild(msgBox);
+            
+            setTimeout(() => {
+                msgBox.style.opacity = '0';
+                setTimeout(() => msgBox.remove(), 300);
+            }, 2000);
+        }
+
+        function openAbout() {
+            modalAbout.style.display = 'flex';
+            dropdownMenu.classList.remove('active');
+        }
+
+        function closeAbout() {
+            modalAbout.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
