@@ -1,7 +1,7 @@
-# MYTHERY NUMBER GAME
+# MYTH NUMBER GAME
 
 ## About
-Game yang menghadirkan konsep dimana dalam hitungan 5 detik setiap mulai acak akan muncul secara acak dan pemain harus menebak angak tersebut dengan cepat karena angka tersebut akan hilang dengan cepat.
+Game yang menghadirkan konsep dimana dalam hitungan 5 detik setiap mulai acak akan muncul angka misterius secara acak dan pemain harus menebak angak tersebut dengan cepat karena angka tersebut akan hilang dengan cepat.
 
 ## MODE PERMAINAN
 **Live Mode**
