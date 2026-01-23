@@ -20,6 +20,25 @@
             margin: 0;
         }
 
+        /* Fitur Anti Copy-Paste */
+        * {
+            user-select: none; /* Mencegah seleksi teks */
+            -webkit-user-select: none; /* Untuk browser berbasis WebKit */
+            -moz-user-select: none; /* Untuk Firefox */
+            -ms-user-select: none; /* Untuk Internet Explorer/Edge */
+        }
+
+        input, textarea {
+            user-select: text; /* Izinkan seleksi hanya pada input */
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+        }
+
+        body::selection, *::selection {
+            background: transparent; /* Sembunyikan highlight seleksi */
+        }
+
         header, footer {
             text-align: center;
         }
@@ -82,7 +101,6 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: #1f2937;
-            /* Mengubah warna teks angka menjadi merah */
             color: #ef4444; 
             padding: 20px 40px;
             border-radius: 12px;
@@ -129,7 +147,7 @@
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;"> <!-- Mencegah klik kanan -->
 
     <!-- Header Section -->
     <header class="bg-white shadow-md p-6 relative">
@@ -241,6 +259,36 @@
         const menuBtn = document.getElementById('menu-btn');
         const dropdownMenu = document.getElementById('dropdown-menu');
         const menuContainer = document.getElementById('menu-container');
+
+        // Fitur Anti Copy-Paste: Event Listeners untuk mencegah copy, cut, paste
+        document.addEventListener('copy', (e) => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        document.addEventListener('cut', (e) => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        document.addEventListener('paste', (e) => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Event listener untuk mencegah drag & drop elemen
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                return false;
+            }
+        });
 
         window.onload = () => {
             resetUI();
